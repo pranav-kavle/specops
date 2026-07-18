@@ -30,13 +30,12 @@ Drift shows up at three points, roughly equally:
 
 ## Skill architecture
 
-Seven skills, chained through artifacts rather than one monolithic skill — each phase transition becomes a checkable "does skill N correctly read skill N-1's artifact" problem instead of an implicit one.
+Six skills, chained through artifacts rather than one monolithic skill — each phase transition becomes a checkable "does skill N correctly read skill N-1's artifact" problem instead of an implicit one.
 
 | Skill | Slash command | Artifact | Gate behavior |
 |---|---|---|---|
 | `running-specops` | *(none — auto-loaded)* | — | Meta/bootstrap skill; routes to the correct phase skill |
-| `writing-the-playbook` | `/specops:playbook` | `playbook.md` | Soft nudge |
-| `writing-the-spec` | `/specops:specify` | `spec.md` | — |
+| `writing-the-spec` | `/specops:specify` | `spec.md` (and `playbook.md`, on first use) | Playbook check is a soft nudge |
 | `planning-to-spec` | `/specops:plan` | `plan.md` | — |
 | `decomposing-into-tasks` | `/specops:tasks` | `tasks.md` | — |
 | `auditing-spec-fidelity` | `/specops:audit` | *(audit report)* | Hard block (objective gaps only) |
@@ -46,20 +45,17 @@ Seven skills, chained through artifacts rather than one monolithic skill — eac
 
 Force-loaded via a SessionStart hook, mirroring how `superpowers:using-superpowers` is injected at the start of every session rather than left to Claude's discretion to notice. Establishes the mandate ("if a `specops` skill applies, invoke it — not optional") and routes to the correct next phase by checking which artifacts already exist for the current feature:
 
-- No `specs/playbook.md` → suggest `writing-the-playbook` (soft nudge, not blocking)
 - No `spec.md` for this feature → `writing-the-spec`
 - `spec.md` exists, no `plan.md` → `planning-to-spec`
 - `plan.md` exists, no `tasks.md` → `decomposing-into-tasks`
 - `tasks.md` exists, not yet audited → `auditing-spec-fidelity`
 - Audited clean → `implementing-with-fidelity`
 
-### `writing-the-playbook`
-
-One-time (or rarely revisited) project-level setup. Captures durable rules every spec/plan/task must honor: coding standards, dependency policy, architectural constraints, testing requirements. **Soft nudge, not a hard gate** — `running-specops` suggests creating one if it's missing, but a solo/prototype user can decline and proceed straight to `writing-the-spec`. A hard gate here would recreate the "jumps to code before requirements are clear" problem, just relocated to a different artifact, for users who don't yet have team-wide conventions to declare.
-
 ### `writing-the-spec`
 
-Standalone Socratic questioning (one question at a time, propose 2-3 approaches, multiple choice preferred) — the same discipline `superpowers:brainstorming` uses, reimplemented directly rather than depended on. Produces `spec.md`:
+Before requirements-gathering starts, checks for `specs/playbook.md` (durable, project-wide rules every spec/plan/task must honor: coding standards, dependency policy, architectural constraints, testing requirements) and offers to capture one if it's missing. **Soft nudge, not a hard gate** — a solo/prototype user can decline and go straight to spec-writing. A hard gate here would recreate the "jumps to code before requirements are clear" problem, just relocated to a different artifact, for users who don't yet have team-wide conventions to declare. Folded into this skill rather than kept as its own (`writing-the-playbook` was cut pre-implementation) since it's a one-time preliminary check with no independent judgment step of its own, not a distinct phase.
+
+Then runs standalone Socratic questioning (one question at a time, propose 2-3 approaches, multiple choice preferred) — the same discipline `superpowers:brainstorming` uses, reimplemented directly rather than depended on. Produces `spec.md`:
 
 - Summary
 - Goals / Non-goals
@@ -93,7 +89,7 @@ Cross-artifact consistency check, run before implementation starts. **Hard block
 - **Coverage**: does every `REQ-N` in `spec.md` appear referenced in `plan.md`, and tagged on at least one task in `tasks.md`?
 - **Contradiction**: does any plan decision or task violate an explicit `playbook.md` rule?
 
-Subjective judgment calls (e.g. "is this the best architecture?") are explicitly out of scope for this gate — it exists to catch drift and scope-narrowing mechanically, not to second-guess design decisions. This is deliberately a hard block despite `writing-the-playbook` being a soft nudge: the audit is the one checkpoint that actually catches pain points B and C (drift, silently-narrowed scope) before wasted implementation work happens, and an advisory-only version is exactly the kind of check that gets waved away under time pressure.
+Subjective judgment calls (e.g. "is this the best architecture?") are explicitly out of scope for this gate — it exists to catch drift and scope-narrowing mechanically, not to second-guess design decisions. This is deliberately a hard block despite the playbook check in `writing-the-spec` being a soft nudge: the audit is the one checkpoint that actually catches pain points B and C (drift, silently-narrowed scope) before wasted implementation work happens, and an advisory-only version is exactly the kind of check that gets waved away under time pressure.
 
 ### `implementing-with-fidelity`
 
@@ -133,7 +129,6 @@ Chosen over a hidden `.specops/` dotfolder (less discoverable to teammates who d
   │   └── marketplace.json
   └── skills/
       ├── running-specops/SKILL.md
-      ├── writing-the-playbook/SKILL.md
       ├── writing-the-spec/SKILL.md
       ├── planning-to-spec/SKILL.md
       ├── decomposing-into-tasks/SKILL.md
@@ -147,6 +142,6 @@ Chosen over a hidden `.specops/` dotfolder (less discoverable to teammates who d
 
 These are deliberately left for `writing-plans` rather than settled here:
 
-- Exact `SKILL.md` content/wording for each of the 7 skills
+- Exact `SKILL.md` content/wording for each of the 6 skills
 - The `SessionStart` hook script for `running-specops`
 - Eval/acceptance-test harness to verify the skills actually behave as designed (`superpowers` has its own eval harness for this — worth reusing the pattern, not the dependency)
