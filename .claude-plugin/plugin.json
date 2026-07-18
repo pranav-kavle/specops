@@ -1,0 +1,18 @@
+{
+  "name": "specops",
+  "description": "Spec-Driven Development anchor for Claude Code: keep Claude faithful to a written spec through an entire feature's build cycle.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Pranav Kavle"
+  },
+  "homepage": "https://github.com/pranav-kavle/specops",
+  "repository": "https://github.com/pranav-kavle/specops",
+  "license": "MIT",
+  "keywords": [
+    "skills",
+    "spec-driven-development",
+    "sdd",
+    "requirements",
+    "workflows"
+  ]
+}
