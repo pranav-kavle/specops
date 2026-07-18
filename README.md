@@ -11,18 +11,15 @@ When Claude implements a feature, it drifts: jumping to code before requirements
 ## The loop
 
 ```
-writing-the-playbook (once, optional)
-        │
-        ▼
 writing-the-spec  →  planning-to-spec  →  decomposing-into-tasks  →  auditing-spec-fidelity  →  implementing-with-fidelity
-   spec.md              plan.md              tasks.md                 (hard gate)                  code
+(+ playbook.md,          plan.md              tasks.md                 (hard gate)                  code
+ once, optional)
 ```
 
 | Skill | Slash command | Artifact |
 |---|---|---|
 | `running-specops` | *(auto-loaded)* | — routes to the right phase below |
-| `writing-the-playbook` | `/specops:playbook` | `specs/playbook.md` |
-| `writing-the-spec` | `/specops:specify` | `specs/<feature>/spec.md` |
+| `writing-the-spec` | `/specops:specify` | `specs/<feature>/spec.md` (+ `specs/playbook.md` on first use) |
 | `planning-to-spec` | `/specops:plan` | `specs/<feature>/plan.md` |
 | `decomposing-into-tasks` | `/specops:tasks` | `specs/<feature>/tasks.md` |
 | `auditing-spec-fidelity` | `/specops:audit` | audit report (hard-blocks on objective gaps) |
